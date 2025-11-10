@@ -9,5 +9,6 @@ public class LcStoreBackendWebApplication {
     public static void main(String[] args) {
         SpringApplication.run(LcStoreBackendWebApplication.class, args);
     }
+    
 
 }
