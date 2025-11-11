@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ Cho Swagger / OpenAPI truy cập tự do
+
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
@@ -31,7 +31,7 @@ public class SecurityConfig {
                                 "/swagger-ui/index.html"
                         ).permitAll()
 
-                        // ✅ Cho các API public
+
                         .requestMatchers(
                                 "/api/v1/users/register",
                                 "/api/v1/auth/**",
@@ -40,7 +40,7 @@ public class SecurityConfig {
                                 "/active/**"
                         ).permitAll()
 
-                        // ✅ ADMIN & USER đều xem được list categories
+
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories")
                         .hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
 
@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/categories/**", "/api/v1/users/**")
                         .hasAuthority("ROLE_ADMIN")
 
-                        // 🔒 Còn lại phải đăng nhập
+
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(

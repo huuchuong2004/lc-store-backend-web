@@ -4,6 +4,7 @@ package vn.huuchuong.lcstorebackendweb.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import vn.huuchuong.lcstorebackendweb.entity.RefreshToken;
 import vn.huuchuong.lcstorebackendweb.exception.BusinessException;
 import vn.huuchuong.lcstorebackendweb.repository.RefreshTokenRepository;
@@ -18,6 +19,12 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
 
+    @Transactional
+    public void revokeByUsernameAndUserAgent(String username, String userAgent) {
+        refreshTokenRepository.deleteByUsernameAndUserAgent(username, userAgent);
+    }
+
+    @Transactional
     public RefreshToken create(String username,
                                String token,
                                String userAgent,
@@ -31,6 +38,7 @@ public class RefreshTokenService {
                 .build();
         return refreshTokenRepository.save(refreshToken);
     }
+
 
     public RefreshToken verify(String token, String currentUserAgent) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
@@ -51,6 +59,7 @@ public class RefreshTokenService {
         return refreshToken;
     }
 
+    @Transactional
     public void revokeByUsername(String username) { // logout
         // đơn giản là xóa hết refresh token theo username
         refreshTokenRepository.deleteByUsername(username);

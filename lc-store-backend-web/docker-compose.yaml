@@ -22,7 +22,7 @@ services:
     depends_on:
       - db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3307/lc-store-db
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/lc-store-db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SERVER_PORT: 8080

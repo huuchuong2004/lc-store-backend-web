@@ -60,6 +60,8 @@ public class AuthServiceImpl implements IAuthService {
         // 👉 Dùng ModelMapper để map User -> LoginUserResponse
         LoginUserResponse account = modelMapper.map(user, LoginUserResponse.class);
 
+        refreshTokenService.revokeByUsernameAndUserAgent(user.getUsername(), httpReq.getHeader("User-Agent")); // se xoa di rfresh token cu neu login
+
         String accessToken = JwtUtils.createAccessToken(account, httpReq); // tien hanh tao refersh va access token
         String refreshToken = JwtUtils.createRefreshToken(account, httpReq);
 

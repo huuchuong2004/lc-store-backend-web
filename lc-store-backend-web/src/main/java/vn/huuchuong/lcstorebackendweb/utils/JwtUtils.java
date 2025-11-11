@@ -20,9 +20,9 @@ public class JwtUtils {
     private static final String SECRET_BASE64 = System.getProperty("jwt.secret-base64",
             "kRZtO5/vUdtnabWGyd/N0CUU7h7ID4OK/OkxXi+j3Qxf7SV40PASQovBDnTIGAe4nSuonLwClVnwP1ucioXhFw==");
 
-    // 15 phút (access token)
+    // 5 phút (access token)
     private static final long ACCESS_TOKEN_EXP =
-            Long.getLong("jwt.access-exp-ms", 15 * 60 * 1000L);
+            Long.getLong("jwt.access-exp-ms", 5 * 60 * 1000L);
 
     // 7 ngày (refresh token)
     private static final long REFRESH_TOKEN_EXP =
@@ -49,7 +49,7 @@ public class JwtUtils {
                 .compact();
     }
 
-    // 🔹 Tạo REFRESH TOKEN
+    //  Tạo REFRESH TOKEN
     public static String createRefreshToken(LoginUserResponse account, HttpServletRequest req) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + REFRESH_TOKEN_EXP);

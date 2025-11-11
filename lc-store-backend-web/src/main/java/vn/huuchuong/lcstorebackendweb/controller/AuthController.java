@@ -29,6 +29,7 @@ public class AuthController {
 
     private final IAuthService authService;
 
+    @Transactional
     @PostMapping("/login")
     public ResponseEntity<BaseResponse<AuthResponse>> login(
             @Valid @RequestBody LoginRequest request,

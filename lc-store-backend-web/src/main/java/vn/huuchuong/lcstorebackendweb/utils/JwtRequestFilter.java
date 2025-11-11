@@ -27,7 +27,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // Các path không cần auth
         if (StringUtils.containsAnyIgnoreCase(path,
-                "/api/v1/auth/login-jwt",
+                "/api/v1/auth/login",
                 "/api/v1/auth/register",
                 "/api/v1/auth/refresh",
                 "/api/v1/account/create",
