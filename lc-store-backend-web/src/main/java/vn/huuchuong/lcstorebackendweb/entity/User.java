@@ -50,7 +50,10 @@ public class User extends BaseEntity {
     private String password;
 
     @Column(length = 150)
-    private String fullName;
+    private String firstName;
+
+    @Column(length = 150)
+    private String lastName;
 
     @Column(length = 30)
     private String phone;

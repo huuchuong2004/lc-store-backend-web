@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kích hoạt tài khoản thành công - LC Store</title>
+    <style>
+        :root {
+            --rum-50:  #f8f8fa;
+            --rum-100: #f3f1f6;
+            --rum-200: #e8e6ee;
+            --rum-300: #d7d2e0;
+            --rum-400: #bfb8cd;
+            --rum-500: #a69ab8;
+            --rum-600: #9382a5;
+            --rum-700: #827193;
+            --rum-800: #6b5d7a;
+            --rum-900: #594d65;
+            --rum-950: #3a3243;
+        }
+
+        body {
+            background: var(--rum-950);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: var(--rum-50);
+        }
+
+        .card {
+            background: var(--rum-900);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            padding: 40px 30px;
+            max-width: 420px;
+            text-align: center;
+            border: 1px solid var(--rum-800);
+            animation: fadeIn 0.7s ease-in-out;
+        }
+
+        .card img {
+            width: 100px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--rum-700);
+        }
+
+        h2 {
+            font-size: 22px;
+            color: var(--rum-50);
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: var(--rum-200);
+            font-size: 15px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: var(--rum-600);
+            color: var(--rum-50);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: 0.3s;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: var(--rum-500);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
+        }
+
+        footer {
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--rum-300);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <img src="https://i.ibb.co/8LfXbPdp/z7116621240566-b8a81aef05e5d43c0d6ee6c265d4dbf9.jpg" alt="LC Store" />
+    <h2>Kích hoạt tài khoản thành công 🎉</h2>
+    <p>Chúc mừng bạn! Tài khoản của bạn đã được kích hoạt thành công.<br />
+        Bây giờ bạn có thể đăng nhập và trải nghiệm các sản phẩm tại <b>LC-Store</b>.
+    </p>
+    <a href="http://localhost:8080/swagger-ui/index.html#/" class="btn">Đăng nhập ngay</a>
+    <footer>Cảm ơn bạn đã tin tưởng LC-Store 💜</footer>
+</div>
+</body>
+</html>

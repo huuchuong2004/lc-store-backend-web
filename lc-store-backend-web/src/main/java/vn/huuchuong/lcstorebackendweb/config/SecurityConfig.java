@@ -11,7 +11,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -20,22 +19,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ Bật CORS và gắn cấu hình từ CORSConfig
                 .cors(CORSConfig.configCorsCustomizer())
-
-                // ❌ Tắt CSRF (vì ta dùng JWT, không dùng session form login)
                 .csrf(csrf -> csrf.disable())
-
-                // ⚙️ Không dùng session, mỗi request tự xác thực (JWT)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // 🔐 Quy định quyền truy cập cho từng loại API
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép truy cập không cần đăng nhập
+                        // ✅ Cho Swagger / OpenAPI truy cập tự do
                         .requestMatchers(
                                 "/v3/api-docs/**",
-                                "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/swagger-ui/index.html"
+                        ).permitAll()
+
+                        // ✅ Cho các API public
+                        .requestMatchers(
                                 "/api/v1/users/register",
                                 "/api/v1/auth/**",
                                 "/api/v1/auth0/**",
@@ -43,21 +40,17 @@ public class SecurityConfig {
                                 "/active/**"
                         ).permitAll()
 
-                        // ADMIN-only
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**", "/api/v1/categories/**", "/api/v1/categories")
-                        .hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/**", "/api/v1/categories/**", "/api/v1/categories")
-                        .hasAuthority("ROLE_ADMIN")
-
-                        // ADMIN hoặc USER đều truy cập được
-                        .requestMatchers("/api/v1/categories")
+                        // ✅ ADMIN & USER đều xem được list categories
+                        .requestMatchers(HttpMethod.GET, "/api/v1/categories")
                         .hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
 
-                        // Còn lại thì phải đăng nhập
+                        // ✅ API quản lý categories/users chỉ ADMIN
+                        .requestMatchers("/api/v1/categories/**", "/api/v1/users/**")
+                        .hasAuthority("ROLE_ADMIN")
+
+                        // 🔒 Còn lại phải đăng nhập
                         .anyRequest().authenticated()
                 )
-
-                // ⚠️ Nếu không có token / sai quyền → trả lỗi 401
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(
                         (request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")
@@ -71,3 +64,5 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
+
