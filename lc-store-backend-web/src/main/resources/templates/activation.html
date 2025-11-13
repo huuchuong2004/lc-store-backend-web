@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kích hoạt tài khoản thành công - LC Store</title>
+    <style>
+        :root {
+            --rum-50:  #f8f8fa;
+            --rum-100: #f3f1f6;
+            --rum-200: #e8e6ee;
+            --rum-300: #d7d2e0;
+            --rum-400: #bfb8cd;
+            --rum-500: #a69ab8;
+            --rum-600: #9382a5;
+            --rum-700: #827193;
+            --rum-800: #6b5d7a;
+            --rum-900: #594d65;
+            --rum-950: #3a3243;
+        }
+
+        body {
+            background: var(--rum-950);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--rum-50);
+        }
+
+        .card {
+            background: var(--rum-900);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            padding: 40px 30px;
+            max-width: 420px;
+            text-align: center;
+            border: 1px solid var(--rum-800);
+            animation: fadeIn 0.7s ease-in-out;
+        }
+
+        .card img {
+            width: 100px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--rum-700);
+        }
+
+        h2 {
+            font-size: 22px;
+            color: var(--rum-50);
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: var(--rum-200);
+            font-size: 15px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        footer {
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--rum-300);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==== UIVERSE BUTTON (namespaced to avoid conflicts) ==== */
+        .uv-link { text-decoration: none; }
+
+        .uv-btn-container {
+            --btn-color: #bfb8cd;           /* bạn có thể đổi thành var(--rum-600) nếu muốn hòa tone */
+            --corner-color: #0002;
+            --corner-dist: 24px;
+            --corner-multiplier: 1.5;
+            --timing-function: cubic-bezier(0, 0, 0, 2.5);
+            --duration: 250ms;
+
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .uv-btn {
+            position: relative;
+            min-width: 180px;
+            min-height: calc(var(--corner-dist) * 2);
+            border-radius: 16px;
+            border: none;
+            padding: 0.25em 1.25em;
+            background: linear-gradient(#fff2, #0001), var(--btn-color);
+            box-shadow:
+                    1px 1px 2px -1px #fff inset,
+                    0 2px 1px #00000010,
+                    0 4px 2px #00000010,
+                    0 8px 4px #00000010,
+                    0 16px 8px #00000010,
+                    0 32px 16px #00000010;
+            transition:
+                    transform var(--duration) var(--timing-function),
+                    filter var(--duration) var(--timing-function);
+            cursor: pointer;
+        }
+
+        .uv-drawer {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            min-height: 32px;
+            border-radius: 16px;
+            border: none;
+            padding: 0.25em 1em;
+            font-size: 0.8em;
+            font-weight: 600;
+            font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            color: #0009;
+            background: linear-gradient(#fff2, #0001), var(--btn-color);
+            background-color: #fbff13;
+            opacity: 0;
+            transition:
+                    transform calc(0.5 * var(--duration)) ease,
+                    filter var(--duration) var(--timing-function),
+                    opacity calc(0.5 * var(--duration)) ease;
+            filter: blur(2px);
+        }
+        .uv-transition-top   { top: 0; left: 0;  border-radius: 12px 12px 0 0;  align-items: start; }
+        .uv-transition-bottom{ bottom: 0; right: 0; border-radius: 0 0 12px 12px; align-items: end; }
+
+        .uv-btn-text {
+            display: inline-block;
+            font-size: 1.2em;
+            font-family: "Syne","Poppins","Inter", sans-serif;
+            font-weight: 700;
+            color: #5550;
+            background-image: linear-gradient(#444, #000a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 1px 0 #fff6) drop-shadow(0 -1px 0 #0006);
+            transition:
+                    transform var(--duration) var(--timing-function),
+                    filter var(--duration) var(--timing-function),
+                    color var(--duration) var(--timing-function);
+        }
+
+        .uv-corner {
+            position: absolute;
+            width: 32px;
+            fill: none;
+            stroke: var(--corner-color);
+            transition:
+                    transform var(--duration) var(--timing-function),
+                    filter var(--duration) var(--timing-function);
+        }
+
+        .uv-corner:nth-of-type(1) {
+            top: 0; left: 0;
+            transform: translate(calc(-1 * var(--corner-dist)), calc(-1 * var(--corner-dist))) rotate(90deg);
+        }
+        .uv-corner:nth-of-type(2) {
+            top: 0; right: 0;
+            transform: translate(var(--corner-dist), calc(-1 * var(--corner-dist))) rotate(180deg);
+        }
+        .uv-corner:nth-of-type(3) {
+            bottom: 0; right: 0;
+            transform: translate(var(--corner-dist), var(--corner-dist)) rotate(-90deg);
+        }
+        .uv-corner:nth-of-type(4) {
+            bottom: 0; left: 0;
+            transform: translate(calc(-1 * var(--corner-dist)), var(--corner-dist)) rotate(0deg);
+        }
+
+        /* Hover/Focus state (requires :has support – ok trên Chrome/Safari/Edge mới) */
+        .uv-btn-container:has(.uv-btn:hover),
+        .uv-btn-container:has(.uv-btn:focus-visible) {
+            .uv-btn {
+                transform: scale(1.05);
+                filter: drop-shadow(0 16px 16px #0002);
+            }
+            .uv-transition-top {
+                transform: translateY(-24px) rotateZ(4deg);
+                filter: blur(0px);
+                animation: hue-anim 3s infinite linear;
+                opacity: 1;
+            }
+            .uv-transition-bottom {
+                transform: translateY(24px) rotateZ(4deg);
+                filter: blur(0px);
+                animation: hue-anim 3s infinite linear;
+                opacity: 1;
+            }
+            .uv-btn-text {
+                filter: drop-shadow(0 1px 0 #fff6) drop-shadow(0 -1px 0 #0006) drop-shadow(0px 6px 2px #0003);
+                transform: scale(1.05);
+                color: #0008;
+            }
+
+            --corner-color: #0004;
+            .uv-corner:first-of-type {
+                transform: translate(calc(-1 * var(--corner-multiplier) * var(--corner-dist)), calc(-1 * var(--corner-multiplier) * var(--corner-dist))) rotate(90deg);
+                filter: drop-shadow(-10px 10px 1px var(--corner-color)) drop-shadow(-20px 20px 2px var(--corner-color));
+            }
+            .uv-corner:nth-of-type(2) {
+                transform: translate(calc(var(--corner-multiplier) * var(--corner-dist)), calc(-1 * var(--corner-multiplier) * var(--corner-dist))) rotate(180deg);
+                filter: drop-shadow(-10px 10px 1px var(--corner-color)) drop-shadow(-20px 20px 2px var(--corner-color));
+            }
+            .uv-corner:nth-of-type(3) {
+                transform: translate(calc(var(--corner-multiplier) * var(--corner-dist)), calc(var(--corner-multiplier) * var(--corner-dist))) rotate(-90deg);
+                filter: drop-shadow(-10px 10px 1px var(--corner-color)) drop-shadow(-20px 20px 2px var(--corner-color));
+            }
+            .uv-corner:nth-of-type(4) {
+                transform: translate(calc(-1 * var(--corner-multiplier) * var(--corner-dist)), calc(var(--corner-multiplier) * var(--corner-dist))) rotate(0deg);
+                filter: drop-shadow(-10px 10px 1px var(--corner-color)) drop-shadow(-20px 20px 2px var(--corner-color));
+            }
+        }
+
+        .uv-btn-container:has(.uv-btn:active) {
+            .uv-btn { transform: scale(0.95); filter: drop-shadow(0 10px 4px #0002); }
+            .uv-transition-top, .uv-transition-bottom { transform: translateY(0) scale(0.5); }
+            .uv-btn-text {
+                filter: drop-shadow(0 1px 0 #fff6) drop-shadow(0 -1px 0 #0006) drop-shadow(0px 6px 2px #0003);
+                transform: scale(1);
+                color: #000a;
+            }
+            --corner-color: #0005;
+            --corner-multiplier: 0.95;
+            .uv-corner:first-of-type {
+                transform: translate(calc(-1 * var(--corner-multiplier) * var(--corner-dist)), calc(-1 * var(--corner-multiplier) * var(--corner-dist))) rotate(90deg);
+                filter: drop-shadow(-10px 10px 2px var(--corner-color)) drop-shadow(-20px 20px 3px var(--corner-color));
+            }
+            .uv-corner:nth-of-type(2) {
+                transform: translate(calc(var(--corner-multiplier) * var(--corner-dist)), calc(-1 * var(--corner-multiplier) * var(--corner-dist))) rotate(180deg);
+                filter: drop-shadow(-10px 10px 2px var(--corner-color)) drop-shadow(-20px 20px 3px var(--corner-color));
+            }
+            .uv-corner:nth-of-type(3) {
+                transform: translate(calc(var(--corner-multiplier) * var(--corner-dist)), calc(var(--corner-multiplier) * var(--corner-dist))) rotate(-90deg);
+                filter: drop-shadow(-10px 10px 2px var(--corner-color)) drop-shadow(-20px 20px 3px var(--corner-color));
+            }
+            .uv-corner:nth-of-type(4) {
+                transform: translate(calc(-1 * var(--corner-multiplier) * var(--corner-dist)), calc(var(--corner-multiplier) * var(--corner-dist))) rotate(0deg);
+                filter: drop-shadow(-10px 10px 2px var(--corner-color)) drop-shadow(-20px 20px 3px var(--corner-color));
+            }
+        }
+
+        @keyframes hue-anim {
+            0%,100% { filter: hue-rotate(0deg); }
+            50%     { filter: hue-rotate(-70deg); }
+        }
+        @-webkit-keyframes hue-anim {
+            0%,100% { -webkit-filter: hue-rotate(0deg); }
+            50%     { -webkit-filter: hue-rotate(-70deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <img src="https://i.ibb.co/8LfXbPdp/z7116621240566-b8a81aef05e5d43c0d6ee6c265d4dbf9.jpg" alt="LC Store" />
+    <h2>Kích hoạt tài khoản thành công 🎉</h2>
+    <p>Chúc mừng bạn! Tài khoản của bạn đã được kích hoạt thành công.<br />
+        Bây giờ bạn có thể đăng nhập và trải nghiệm các sản phẩm tại <b>LC-Store</b>.
+    </p>
+
+    <!-- UIVERSE BUTTON (đã biến thành link) -->
+    <a class="uv-link" href="http://localhost:8080/swagger-ui/index.html#/" aria-label="Đăng nhập ngay">
+        <div class="uv-btn-container">
+            <div class="uv-drawer uv-transition-top">LC-Store</div>
+            <div class="uv-drawer uv-transition-bottom">Login Now ?</div>
+
+            <button class="uv-btn" type="button">
+                <span class="uv-btn-text">Đăng nhập ngay</span>
+            </button>
+
+            <svg class="uv-corner" xmlns="http://www.w3.org/2000/svg" viewBox="-1 1 32 32">
+                <path d="M32,32C14.355,32,0,17.645,0,0h.985c0,17.102,13.913,31.015,31.015,31.015v.985Z"></path>
+            </svg>
+            <svg class="uv-corner" xmlns="http://www.w3.org/2000/svg" viewBox="-1 1 32 32">
+                <path d="M32,32C14.355,32,0,17.645,0,0h.985c0,17.102,13.913,31.015,31.015,31.015v.985Z"></path>
+            </svg>
+            <svg class="uv-corner" xmlns="http://www.w3.org/2000/svg" viewBox="-1 1 32 32">
+                <path d="M32,32C14.355,32,0,17.645,0,0h.985c0,17.102,13.913,31.015,31.015,31.015v.985Z"></path>
+            </svg>
+            <svg class="uv-corner" xmlns="http://www.w3.org/2000/svg" viewBox="-1 1 32 32">
+                <path d="M32,32C14.355,32,0,17.645,0,0h.985c0,17.102,13.913,31.015,31.015,31.015v.985Z"></path>
+            </svg>
+        </div>
+    </a>
+
+    <footer>Cảm ơn bạn đã tin tưởng LC-Store 💜</footer>
+</div>
+</body>
+</html>
