@@ -7,12 +7,18 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: lc-store-db
+      # Tuỳ môi trường, nếu cần cho root connect từ container khác:
+      # MYSQL_ROOT_HOST: "%"
     ports:
-      - "3307:3306"
+      - "3307:3306"               # host:container (3307 cho host, 3306 nội bộ)
     volumes:
       - lc_store_db_data:/var/lib/mysql
     restart: always
-
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   backend:
     build:
@@ -21,13 +27,19 @@ services:
     container_name: lc-store-backend
     depends_on:
       - db
+      # Nếu compose hỗ trợ, dùng:
+      # db:
+      #   condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/lc-store-db
+      # BÊN TRONG mạng Docker, MySQL là cổng 3306 (không phải 3307)
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/lc-store-db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SERVER_PORT: 8080
+      # Nếu cần chắc chắn bind mọi interface (thường không cần):
+      # SERVER_ADDRESS: 0.0.0.0
     ports:
-      - "8080:8080"
+      - "8080:8080"               # để máy khác truy cập qua host:8080
     restart: always
 
 volumes:

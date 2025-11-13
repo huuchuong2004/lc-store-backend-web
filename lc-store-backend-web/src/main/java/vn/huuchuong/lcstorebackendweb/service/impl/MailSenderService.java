@@ -1,5 +1,6 @@
 package vn.huuchuong.lcstorebackendweb.service.impl;
 
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +24,7 @@ public class MailSenderService implements IMailSenderService {
     @Value("${spring.mail.username}")
     private String from;
 
-    /**
-     * Hàm dùng chung để gửi email HTML.
-     */
+
     private BaseResponse<String> doSendHtmlMail(String to, String subject, String htmlContent) {
         try {
             MimeMessage message = emailSender.createMimeMessage();
@@ -36,7 +35,7 @@ public class MailSenderService implements IMailSenderService {
                     StandardCharsets.UTF_8.name()
             );
 
-            helper.setFrom(from);
+            helper.setFrom(new InternetAddress(from,"LC Store 💜"));
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true); // true = nội dung là HTML

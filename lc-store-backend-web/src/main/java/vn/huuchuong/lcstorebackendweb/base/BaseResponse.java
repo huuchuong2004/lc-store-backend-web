@@ -15,6 +15,8 @@ public class BaseResponse<T> {
     private T data;
     private String message;
 
+
+
     // Khai báo 1 kiểu để đồng nhất kiểu dưx liệu trả về cho frontend
 
 

@@ -1,12 +1,14 @@
 package vn.huuchuong.lcstorebackendweb.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import vn.huuchuong.lcstorebackendweb.entity.User;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface IUserRepository extends JpaRepository<User, UUID> {
+public interface IUserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
 
     Optional<User> findByUsername(String username);
 
@@ -16,6 +18,9 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
     // 🔹 Kiểm tra email đã tồn tại (nếu có field email)
     boolean existsByEmail(String email);
     Optional<User> findByEmail(String email);
+
+
+
 
 
 }

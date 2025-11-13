@@ -178,7 +178,7 @@ public class AuthServiceImpl implements IAuthService {
             Path filePath = Paths.get("src/main/resources/templates/activation.html");
             return Files.readString(filePath);
         } catch (IOException e) {
-            // Nếu lỗi đọc file thì trả về HTML fallback đơn giản
+
             return """
             <!doctype html><meta charset="utf-8">
             <title>Kích hoạt tài khoản</title>

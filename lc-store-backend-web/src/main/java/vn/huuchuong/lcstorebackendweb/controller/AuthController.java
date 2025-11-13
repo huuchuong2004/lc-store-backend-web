@@ -2,6 +2,7 @@ package vn.huuchuong.lcstorebackendweb.controller;
 
 
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class AuthController {
 
     private final IAuthService authService;
 
+    @Operation(summary = "Đăng nhập", description = "Đăng nhập và trả về access + refresh token")
     @Transactional
     @PostMapping("/login")
     public ResponseEntity<BaseResponse<AuthResponse>> login(
@@ -76,6 +78,8 @@ public class AuthController {
         BaseResponse<String> response = authService.resendActivationEmail(email);
         return ResponseEntity.ok(response);
     }
+
+
 
 }
 

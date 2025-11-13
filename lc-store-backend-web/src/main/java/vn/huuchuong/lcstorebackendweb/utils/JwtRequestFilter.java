@@ -23,32 +23,49 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                                     @NotNull HttpServletResponse res,
                                     @NotNull FilterChain chain) throws ServletException, IOException {
 
-        String path = req.getRequestURI();
 
-        // Các path không cần auth
-        if (StringUtils.containsAnyIgnoreCase(path,
-                "/api/v1/auth/login",
-                "/api/v1/auth/register",
-                "/api/v1/auth/refresh",
-                "/api/v1/account/create",
-                "/api/v1/product/search",
-                "/api/v1/auth/active",
-                "/swagger-ui",
-                "/swagger-resources",
-                "/v3/api-docs"
-        )) {
+        String rawPath = req.getRequestURI();
+        String path = rawPath == null ? "" : rawPath.toLowerCase(java.util.Locale.ROOT);
+
+// Bỏ qua preflight CORS
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
             chain.doFilter(req, res);
             return;
         }
 
-        // Lấy token từ header Authorization: Bearer xxx
-        String header = req.getHeader(AUTHORIZATION);
-        String token = null;
-        if (StringUtils.isNotBlank(header) &&
-                header.toLowerCase().startsWith("bearer ")) {
-            token = header.substring(7).trim();
+        boolean whitelisted =
+                // Auth endpoints (login/register/activate/refresh/active...) — cho toàn bộ /api/v1/auth/**
+                path.equals("/api/v1/auth/login")
+                        || path.equals("/api/v1/auth/register")
+                        || path.startsWith("/api/v1/auth/")   // covers /activate, /active, /refresh, v.v.
+                        // Các endpoint public khác
+                        || path.equals("/api/v1/account/create")
+                        || path.equals("/api/v1/product/search")
+                        // Swagger/OpenAPI
+                        || path.startsWith("/swagger-ui")
+                        || path.startsWith("/swagger-resources")
+                        || path.startsWith("/v3/api-docs")
+                        // Static/common
+                        || path.equals("/favicon.ico")
+                        || path.equals("/")
+                ;
+
+        if (whitelisted) {
+            chain.doFilter(req, res);
+            return;
         }
 
+
+        String header = req.getHeader("Authorization");
+        if (header == null || !header.regionMatches(true, 0, "Bearer ", 0, 7)) {
+
+            chain.doFilter(req, res);
+            return;
+        }
+
+        String token = header.substring(7).trim();
+
+// Chỉ khi CÓ token mới validate + set Authentication
         var authentication = JwtUtils.checkAccessToken(token, req);
         if (authentication != null
                 && SecurityContextHolder.getContext().getAuthentication() == null) {

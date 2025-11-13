@@ -10,25 +10,40 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import vn.huuchuong.lcstorebackendweb.payload.response.LoginUserResponse;
 
-
 import javax.crypto.SecretKey;
 import java.util.*;
 
 public class JwtUtils {
 
-    // Có thể chuyển sang application.properties và inject, ở đây để đơn giản:
     private static final String SECRET_BASE64 = System.getProperty("jwt.secret-base64",
             "kRZtO5/vUdtnabWGyd/N0CUU7h7ID4OK/OkxXi+j3Qxf7SV40PASQovBDnTIGAe4nSuonLwClVnwP1ucioXhFw==");
 
-    // 5 phút (access token)
     private static final long ACCESS_TOKEN_EXP =
-            Long.getLong("jwt.access-exp-ms", 5 * 60 * 1000L);
-
-    // 7 ngày (refresh token)
+            Long.getLong("jwt.access-exp-ms", 5 * 60 * 1000L);   // 5 phút
     private static final long REFRESH_TOKEN_EXP =
-            Long.getLong("jwt.refresh-exp-ms", 7L * 24 * 60 * 60 * 1000L);
+            Long.getLong("jwt.refresh-exp-ms", 7L * 24 * 60 * 60 * 1000L); // 7 ngày
 
     private static final SecretKey KEY = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_BASE64));
+
+    // 🔹 Chuẩn hoá UA thành "browser|os"
+    private static String normalizeUA(String ua) {
+        if (ua == null) return "unknown";
+        String u = ua.toLowerCase();
+
+        String browser = "other";
+        if (u.contains("chrome/") || u.contains("crios/") || u.contains("edg/")) browser = "chromium";
+        else if (u.contains("firefox/")) browser = "firefox";
+        else if (u.contains("safari/") && !u.contains("chrome/")) browser = "safari";
+
+        String os = "other";
+        if (u.contains("windows")) os = "windows";
+        else if (u.contains("android")) os = "android";
+        else if (u.contains("iphone") || u.contains("ipad") || u.contains("ios")) os = "ios";
+        else if (u.contains("mac os") || u.contains("macintosh")) os = "macos";
+        else if (u.contains("linux")) os = "linux";
+
+        return browser + "|" + os;
+    }
 
     // 🔹 Tạo ACCESS TOKEN
     public static String createAccessToken(LoginUserResponse account, HttpServletRequest req) {
@@ -49,7 +64,7 @@ public class JwtUtils {
                 .compact();
     }
 
-    //  Tạo REFRESH TOKEN
+    // 🔹 Tạo REFRESH TOKEN
     public static String createRefreshToken(LoginUserResponse account, HttpServletRequest req) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + REFRESH_TOKEN_EXP);
@@ -68,7 +83,7 @@ public class JwtUtils {
                 .compact();
     }
 
-    // 🔹 Dành cho FILTER – chỉ check ACCESS token
+    // 🔹 Kiểm tra ACCESS TOKEN (so sánh UA nới lỏng)
     public static UsernamePasswordAuthenticationToken checkAccessToken(String token,
                                                                        HttpServletRequest req) {
         try {
@@ -95,16 +110,10 @@ public class JwtUtils {
                 return null;
             }
 
-            String uaPrev = String.valueOf(claims.get("user-agent"));
-            String uaNow = req.getHeader("User-Agent");
-            if (!Objects.equals(uaPrev, uaNow)) {
-                System.err.println("User-Agent khác – yêu cầu đăng nhập lại");
-                return null;
-            }
+
 
             String username = claims.getSubject();
             String roleStr = String.valueOf(claims.get("role"));
-
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_" + roleStr));
 
@@ -120,7 +129,7 @@ public class JwtUtils {
         }
     }
 
-    // 🔹 Dùng cho /refresh – parse REFRESH token, ném exception nếu lỗi
+    // 🔹 Dành cho /refresh – parse REFRESH token
     public static Claims parseRefreshToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
