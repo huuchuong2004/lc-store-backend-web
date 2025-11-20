@@ -23,7 +23,10 @@ public class CORSConfig {
                         "http://localhost:8080",
                         "http://localhost:8081",
                         "http://localhost:8082",
-                        "http://localhost:8083"
+                        "http://localhost:8083",
+                        "http://127.0.0.1:5501"
+                        ,"http://localhost:5173"
+                        ,"http://localhost:5174"
                 ));
                 // nhớ thêm OPTIONS để preflight không lỗi
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
