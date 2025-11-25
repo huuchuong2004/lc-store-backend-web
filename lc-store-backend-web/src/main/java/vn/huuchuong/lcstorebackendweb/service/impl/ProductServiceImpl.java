@@ -10,25 +10,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import vn.huuchuong.lcstorebackendweb.entity.Category;
-import vn.huuchuong.lcstorebackendweb.entity.Product;
-import vn.huuchuong.lcstorebackendweb.entity.ProductImage;
-import vn.huuchuong.lcstorebackendweb.entity.ProductVariant;
+import vn.huuchuong.lcstorebackendweb.entity.*;
 import vn.huuchuong.lcstorebackendweb.exception.BusinessException;
 
 import vn.huuchuong.lcstorebackendweb.payload.request.product.*;
 import vn.huuchuong.lcstorebackendweb.payload.response.ProductListResponse;
 import vn.huuchuong.lcstorebackendweb.payload.response.ProductResponse;
 import vn.huuchuong.lcstorebackendweb.payload.response.ProductVariantResponse;
-import vn.huuchuong.lcstorebackendweb.repository.ICategoryRepository;
-import vn.huuchuong.lcstorebackendweb.repository.IProductImageRepository;
-import vn.huuchuong.lcstorebackendweb.repository.IProductRepository;
-import vn.huuchuong.lcstorebackendweb.repository.IProductVariantRepository;
+import vn.huuchuong.lcstorebackendweb.repository.*;
 import vn.huuchuong.lcstorebackendweb.service.IProductService;
 import vn.huuchuong.lcstorebackendweb.utils.ProductMapper;
 
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +36,7 @@ public class ProductServiceImpl implements IProductService {
     private final IProductVariantRepository productVariantRepository;
     private final IProductImageRepository productImageRepository;
     private final ProductMapper productMapper;
+    private final InventoryRepository inventoryRepository;
 
     // ======================== CREATE PRODUCT ============================
 
@@ -183,21 +179,15 @@ public class ProductServiceImpl implements IProductService {
             product.setVariants(new ArrayList<>());
         }
 
+        // Kiểm tra trùng size + color
         boolean exists = product.getVariants().stream()
                 .anyMatch(v -> v.getSize().equalsIgnoreCase(req.getSize())
                         && v.getColor().equalsIgnoreCase(req.getColor()));
         if (exists) {
-            throw new BusinessException("Biến thể size " + req.getSize()
-                    + " - màu " + req.getColor() + " đã tồn tại");
+            throw new BusinessException("Biến thể này đã tồn tại");
         }
 
-        if (req.getPrice() == null || req.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("Giá biến thể phải lớn hơn 0");
-        }
-        if (req.getQuantityInStock() == null || req.getQuantityInStock() < 0) {
-            throw new BusinessException("Tồn kho không được âm");
-        }
-
+        // Tạo variant mới
         ProductVariant variant = new ProductVariant();
         variant.setProduct(product);
         variant.setSize(req.getSize());
@@ -205,17 +195,32 @@ public class ProductServiceImpl implements IProductService {
         variant.setPrice(req.getPrice());
         variant.setQuantityInStock(req.getQuantityInStock());
 
+        // Gen sku nếu rỗng
         String sku = req.getSku();
         if (sku == null || sku.isBlank()) {
             sku = generateUniqueSku(product, req);
         }
         variant.setSku(sku);
 
+        // Lưu variant vào product
         product.getVariants().add(variant);
 
+        // Lưu product để variant có ID
         Product saved = productRepository.save(product);
+
+
+        Inventory inventory = new Inventory();
+        inventory.setProductVariant(variant);
+        inventory.setCurrentStockLevel(variant.getQuantityInStock());
+        inventory.setLastUpdate(LocalDate.now());
+
+        inventoryRepository.save(inventory);
+
+        // ================================
+
         return productMapper.toProductResponse(saved);
     }
+
 
     // ======================== VARIANT: UPDATE ============================
 
