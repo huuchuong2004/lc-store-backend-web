@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import vn.huuchuong.lcstorebackendweb.base.BaseResponse;
 
@@ -25,6 +26,7 @@ public class ProductController {
 
     // 1. Create product
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BaseResponse<ProductResponse>> create(
             @RequestBody CreateProductRequest req) {
         return ResponseEntity.ok(
@@ -53,6 +55,7 @@ public class ProductController {
 
     // 4. Update product
     @PutMapping("/{productId}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BaseResponse<ProductResponse>> update(
             @PathVariable Integer productId,
             @RequestBody UpdateProductRequest req) {
@@ -63,6 +66,7 @@ public class ProductController {
 
     // 5. Delete product
     @DeleteMapping("/{productId}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BaseResponse<String>> delete(@PathVariable Integer productId) {
         productService.deleteProduct(productId);
         return ResponseEntity.ok(BaseResponse.success("Xóa sản phẩm thành công"));
@@ -73,6 +77,7 @@ public class ProductController {
 
     // 6. Create variant
     @PostMapping("/{productId}/variants")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BaseResponse<ProductResponse>> addVariant(
             @PathVariable Integer productId,
             @RequestBody CreateProductVariantRequest req) {
@@ -83,6 +88,7 @@ public class ProductController {
 
     // 7. Update variant
     @PutMapping("/{productId}/variants/{variantId}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BaseResponse<ProductResponse>> updateVariant(
             @PathVariable Integer productId,
             @PathVariable Integer variantId,
@@ -95,6 +101,7 @@ public class ProductController {
 
     // 8. Delete variant
     @DeleteMapping("/{productId}/variants/{variantId}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BaseResponse<String>> deleteVariant(
             @PathVariable Integer productId,
             @PathVariable Integer variantId) {
@@ -106,6 +113,7 @@ public class ProductController {
 
     // 9. Add images
     @PostMapping("/{productId}/images")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BaseResponse<ProductResponse>> addImages(
             @PathVariable Integer productId,
             @RequestBody AddProductImagesRequest req) {
@@ -116,10 +124,20 @@ public class ProductController {
 
     // 10. Delete image
     @DeleteMapping("/{productId}/images/{imageId}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BaseResponse<String>> deleteImage(
             @PathVariable Integer productId,
             @PathVariable Integer imageId) {
         productService.deleteImage(productId, imageId);
         return ResponseEntity.ok(BaseResponse.success("Xóa ảnh thành công"));
+    }
+
+    // 11. Hàm tìm kiếm theo tên...
+    @GetMapping("search")
+    public ResponseEntity<BaseResponse<Page<ProductListResponse>>> search(@ModelAttribute ProductFilter productFilter,Pageable pageable) {
+
+        Page page = productService.search(productFilter,pageable);
+        return ResponseEntity.ok(new BaseResponse<>(page,"Tim kiem thanh cong"));
+
     }
 }

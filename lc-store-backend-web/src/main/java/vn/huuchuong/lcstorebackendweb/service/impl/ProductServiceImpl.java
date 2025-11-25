@@ -160,11 +160,44 @@ public class ProductServiceImpl implements IProductService {
 
     @Override
     @Transactional
-    public void deleteProduct(Integer id) {
-        Product product = productRepository.findById(id)
+    public void deleteProduct(Integer productId) {
+
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException("Sản phẩm không tồn tại"));
+
+        // Lấy danh sách variants
+        List<ProductVariant> variants = product.getVariants();
+
+        if (variants != null) {
+
+            // 1. Kiểm tra tồn kho của tất cả variant
+            for (ProductVariant variant : variants) {
+
+                Inventory inv = inventoryRepository.findByProductVariant(variant).orElse(null);
+
+                if (inv != null && inv.getCurrentStockLevel() != null
+                        && inv.getCurrentStockLevel() > 0) {
+                    throw new BusinessException(
+                            "Không thể xóa sản phẩm vì biến thể " + variant.getSku()
+                                    + " còn tồn kho: " + inv.getCurrentStockLevel()
+                    );
+                }
+            }
+
+            // 2. Xóa inventory nếu tất cả tồn kho = 0
+            for (ProductVariant variant : variants) {
+                Inventory inv = inventoryRepository.findByProductVariant(variant).orElse(null);
+
+                if (inv != null) {
+                    inventoryRepository.delete(inv);
+                }
+            }
+        }
+
+        // 3. Xóa product
         productRepository.delete(product);
     }
+
 
     // ======================== VARIANT: CREATE ============================
 
@@ -293,6 +326,23 @@ public class ProductServiceImpl implements IProductService {
             throw new BusinessException("Biến thể không thuộc về sản phẩm này");
         }
 
+        // 4. Lấy inventory tương ứng
+        Inventory inventory = inventoryRepository.findByProductVariant(variant)
+                .orElse(null);
+
+        // 5. Nếu còn tồn kho > 0 → cấm xóa
+        if (inventory != null && inventory.getCurrentStockLevel() != null
+                && inventory.getCurrentStockLevel() > 0) {
+            throw new BusinessException(
+                    "Không thể xóa biến thể vì còn tồn kho: " + inventory.getCurrentStockLevel()
+            );
+        }
+        // 7. Xóa inventory nếu có
+        if (inventory != null) {
+            inventoryRepository.delete(inventory);
+        }
+
+
         productVariantRepository.delete(variant);
     }
 
@@ -346,6 +396,11 @@ public class ProductServiceImpl implements IProductService {
         }
 
         productImageRepository.delete(image);
+    }
+
+    @Override
+    public Page search(ProductFilter productFilter, Pageable pageable) {
+        return null;
     }
 
     // ======================== SKU HELPER ============================

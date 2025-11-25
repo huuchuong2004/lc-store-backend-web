@@ -30,4 +30,6 @@ public interface IProductService {
     ProductResponse addImages(Integer productId, AddProductImagesRequest req);
 
     void deleteImage(Integer productId, Integer imageId);
+
+    Page search(ProductFilter productFilter, Pageable pageable);
 }
