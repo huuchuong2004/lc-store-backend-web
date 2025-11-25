@@ -20,19 +20,26 @@ import java.util.List;
 public class ProductVariant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_variant_id")
     private Integer productVariantId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @OneToMany(mappedBy = "variant", cascade = CascadeType.ALL,orphanRemoval = true)
-    @JsonIgnore // tranh bi lap
-    private List<VariantAttribute> attributes = new ArrayList<>();
+    @Column(length = 100)
+    private String sku;
 
+    @Column(length = 50)
+    private String size;
+
+    @Column(length = 50)
+    private String color;
+
+    @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "quantity_in_stock")
     private Integer quantityInStock;
-
 
 }

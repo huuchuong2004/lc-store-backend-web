@@ -19,7 +19,7 @@ public class JwtUtils {
             "kRZtO5/vUdtnabWGyd/N0CUU7h7ID4OK/OkxXi+j3Qxf7SV40PASQovBDnTIGAe4nSuonLwClVnwP1ucioXhFw==");
 
     private static final long ACCESS_TOKEN_EXP =
-            Long.getLong("jwt.access-exp-ms", 5 * 60 * 1000L);   // 5 phút
+            Long.getLong("jwt.access-exp-ms", 100 * 60 * 1000L);   // 5 phút sua 100 thanh 5
     private static final long REFRESH_TOKEN_EXP =
             Long.getLong("jwt.refresh-exp-ms", 7L * 24 * 60 * 60 * 1000L); // 7 ngày
 
