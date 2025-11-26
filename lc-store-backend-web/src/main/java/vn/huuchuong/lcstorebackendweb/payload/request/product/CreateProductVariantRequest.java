@@ -1,10 +1,12 @@
 package vn.huuchuong.lcstorebackendweb.payload.request.product;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
+
 public class CreateProductVariantRequest {
 
     private String size;
@@ -15,5 +17,5 @@ public class CreateProductVariantRequest {
 
     private Integer quantityInStock;
 
-    private String sku; // có thể để trống, service sẽ tự gen
+    private String sku;
 }

@@ -57,16 +57,13 @@ public class ProductServiceImpl implements IProductService {
         product.setDescription(req.getDescription());
         product.setBaseprice(req.getBaseprice());
 
-        if (product.getVariants() == null) {
-            product.setVariants(new ArrayList<>());
-        }
-        if (product.getImages() == null) {
-            product.setImages(new ArrayList<>());
-        }
+        product.setVariants(new ArrayList<>());
+        product.setImages(new ArrayList<>());
 
-        // variants
+        // Tạo variants
         if (req.getVariants() != null) {
             for (CreateProductVariantRequest vReq : req.getVariants()) {
+
                 ProductVariant variant = new ProductVariant();
                 variant.setProduct(product);
                 variant.setSize(vReq.getSize());
@@ -84,7 +81,7 @@ public class ProductServiceImpl implements IProductService {
             }
         }
 
-        // images
+        // Tạo images
         if (req.getImageUrls() != null) {
             for (String url : req.getImageUrls()) {
                 if (url == null || url.isBlank()) continue;
@@ -96,6 +93,16 @@ public class ProductServiceImpl implements IProductService {
         }
 
         Product saved = productRepository.save(product);
+
+        // 🔥 Tạo inventory cho từng variant
+        for (ProductVariant v : saved.getVariants()) {
+            Inventory inv = new Inventory();
+            inv.setProductVariant(v);
+            inv.setCurrentStockLevel(v.getQuantityInStock());
+            inv.setLastUpdate(LocalDate.now());
+            inventoryRepository.save(inv);
+        }
+
         return productMapper.toProductResponse(saved);
     }
 
@@ -169,18 +176,15 @@ public class ProductServiceImpl implements IProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException("Sản phẩm không tồn tại"));
 
-        // Lấy danh sách variants
         List<ProductVariant> variants = product.getVariants();
 
         if (variants != null) {
-
-            // 1. Kiểm tra tồn kho của tất cả variant
             for (ProductVariant variant : variants) {
 
-                Inventory inv = inventoryRepository.findByProductVariant(variant).orElse(null);
+                Inventory inv = inventoryRepository.findByProductVariant(variant)
+                        .orElse(null);
 
-                if (inv != null && inv.getCurrentStockLevel() != null
-                        && inv.getCurrentStockLevel() > 0) {
+                if (inv != null && inv.getCurrentStockLevel() > 0) {
                     throw new BusinessException(
                             "Không thể xóa sản phẩm vì biến thể " + variant.getSku()
                                     + " còn tồn kho: " + inv.getCurrentStockLevel()
@@ -188,20 +192,14 @@ public class ProductServiceImpl implements IProductService {
                 }
             }
 
-            // 2. Xóa inventory nếu tất cả tồn kho = 0
             for (ProductVariant variant : variants) {
                 Inventory inv = inventoryRepository.findByProductVariant(variant).orElse(null);
-
-                if (inv != null) {
-                    inventoryRepository.delete(inv);
-                }
+                if (inv != null) inventoryRepository.delete(inv);
             }
         }
 
-        // 3. Xóa product
         productRepository.delete(product);
     }
-
 
     // ======================== VARIANT: CREATE ============================
 
@@ -275,10 +273,12 @@ public class ProductServiceImpl implements IProductService {
             throw new BusinessException("Biến thể không thuộc về sản phẩm này");
         }
 
-        String newSize = req.getSize() != null && !req.getSize().isBlank()
+        // Validate size + color
+        String newSize = (req.getSize() != null && !req.getSize().isBlank())
                 ? req.getSize().trim()
                 : variant.getSize();
-        String newColor = req.getColor() != null && !req.getColor().isBlank()
+
+        String newColor = (req.getColor() != null && !req.getColor().isBlank())
                 ? req.getColor().trim()
                 : variant.getColor();
 
@@ -286,31 +286,34 @@ public class ProductServiceImpl implements IProductService {
                 .anyMatch(v -> !v.getProductVariantId().equals(variantId)
                         && v.getSize().equalsIgnoreCase(newSize)
                         && v.getColor().equalsIgnoreCase(newColor));
+
         if (duplicated) {
-            throw new BusinessException("Biến thể size " + newSize
-                    + " - màu " + newColor + " đã tồn tại");
+            throw new BusinessException("Biến thể size " + newSize + " - màu " + newColor + " đã tồn tại");
         }
 
-        if (req.getSize() != null && !req.getSize().isBlank()) {
-            variant.setSize(newSize);
-        }
-        if (req.getColor() != null && !req.getColor().isBlank()) {
-            variant.setColor(newColor);
-        }
-        if (req.getPrice() != null) {
-            if (req.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new BusinessException("Giá biến thể phải lớn hơn 0");
-            }
-            variant.setPrice(req.getPrice());
-        }
+        // Update basic info
+        if (req.getSize() != null) variant.setSize(newSize);
+        if (req.getColor() != null) variant.setColor(newColor);
+        if (req.getPrice() != null) variant.setPrice(req.getPrice());
+
+        // 🔥 Update tồn kho trong inventory
         if (req.getQuantityInStock() != null) {
             if (req.getQuantityInStock() < 0) {
                 throw new BusinessException("Tồn kho không được âm");
             }
+
             variant.setQuantityInStock(req.getQuantityInStock());
+
+            Inventory inv = inventoryRepository.findByProductVariant(variant)
+                    .orElseThrow(() -> new BusinessException("Không tìm thấy inventory"));
+
+            inv.setCurrentStockLevel(req.getQuantityInStock());
+            inv.setLastUpdate(LocalDate.now());
+            inventoryRepository.save(inv);
         }
 
         productVariantRepository.save(variant);
+
         return productMapper.toProductResponse(product);
     }
 
