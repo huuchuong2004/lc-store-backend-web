@@ -142,7 +142,8 @@ public class ProductController {
     }
 
     // 12 lay danh sach theo tree
-    public ResponseEntity<BaseResponse<Page<ProductListResponse>>> getProductsByCategorys(Integer categoryId, Pageable pageable) {
+    @GetMapping("/categories/{id}/products")
+    public ResponseEntity<BaseResponse<Page<ProductListResponse>>> getProductsByCategorys( @PathVariable Integer categoryId, Pageable pageable) {
             return ResponseEntity.ok(new BaseResponse<>(productService.getProductByCategpgys(categoryId,pageable),"Lay danh sach thanh cong"));
     }
 }
