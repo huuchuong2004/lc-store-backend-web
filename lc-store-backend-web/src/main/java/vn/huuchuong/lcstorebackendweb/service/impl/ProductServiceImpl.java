@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -19,13 +20,16 @@ import vn.huuchuong.lcstorebackendweb.payload.response.ProductResponse;
 import vn.huuchuong.lcstorebackendweb.payload.response.ProductVariantResponse;
 import vn.huuchuong.lcstorebackendweb.repository.*;
 import vn.huuchuong.lcstorebackendweb.service.IProductService;
+import vn.huuchuong.lcstorebackendweb.spectification.ProductSpectification;
 import vn.huuchuong.lcstorebackendweb.utils.ProductMapper;
 
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 @Service
 @RequiredArgsConstructor
@@ -399,8 +403,38 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public Page search(ProductFilter productFilter, Pageable pageable) {
-        return null;
+    public Page search(ProductFilter req, Pageable pageable) {
+        Specification<Product> spec = Specification.where(null);
+
+        if (req.getName() != null && !req.getName().isBlank()) {
+            spec = spec.and(ProductSpectification.hasName(req.getName()));
+        }
+
+        if (req.getCategoryId() != null && req.getCategoryId() > 0) {
+            spec = spec.and(ProductSpectification.hasCategory(req.getCategoryId()));
+        }
+
+        if (req.getMinPrice() != null) {
+            spec = spec.and(ProductSpectification.hasMinPrice(req.getMinPrice()));
+        }
+
+        if (req.getMaxPrice() != null) {
+            spec = spec.and(ProductSpectification.hasMaxPrice(req.getMaxPrice()));
+        }
+
+        Page<Product> page = productRepository.findAll(spec, pageable);
+
+        return page.map(productMapper::toProductListResponse);
+    }
+
+    @Override
+    public Page<ProductListResponse> getProductByCategpgys(Integer categoryId, Pageable pageable) {
+        Category root = categoryRepository.findById(categoryId).orElseThrow(()->new BusinessException("Danh Muc Khong Co !"));
+
+        List<Integer> list= getAllCategoryIdsIteractive(root);
+        Page<Product> find= productRepository.findByCategory_IdIn(list, pageable);
+        return find.map(productMapper::toProductListResponse);
+
     }
 
     // ======================== SKU HELPER ============================
@@ -425,6 +459,22 @@ public class ProductServiceImpl implements IProductService {
     private String normalize(String s) {
         if (s == null) return "";
         return s.trim().replaceAll("\\s+", "-").toUpperCase();
+    }
+
+    private List<Integer> getAllCategoryIdsIteractive(Category root){
+        List<Integer> categoryIds = new ArrayList<>(); // tao lisst luu id
+        Queue<Category> categoryQueue = new LinkedList<>(); // tao 1 hang doi luu catggory
+
+        categoryQueue.add(root); // bo root vao dau tien  // luc nao trong quue se co ao
+        while (!categoryQueue.isEmpty()) { // catgory co ao ti tuc
+            Category category = categoryQueue.poll(); // lay phan tu ban dau ra va xoa no ngay lap tu ckhoi queue
+            categoryIds.add(category.getId());
+            if (category.getChildren() != null && !category.getChildren().isEmpty()) { // neu no co con thi bo con no vao queue,
+                // vi du duuyet ao thi ao co con la ao thun thi bi ao thun vao,, duyet tiep ao thun cho toi khi orng hti se co dc list id
+                categoryQueue.addAll(category.getChildren());
+            }
+        }
+        return categoryIds;
     }
 }
 

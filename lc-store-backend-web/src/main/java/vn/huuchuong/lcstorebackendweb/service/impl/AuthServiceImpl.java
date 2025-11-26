@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -174,20 +175,12 @@ public class AuthServiceImpl implements IAuthService {
         }
 
         try {
-            // Đọc nội dung file HTML trong resources/templates
-            Path filePath = Paths.get("src/main/resources/templates/activation.html");
-            return Files.readString(filePath);
+            ClassPathResource resource = new ClassPathResource("templates/activation.html");
+            return Files.readString(resource.getFile().toPath());
         } catch (IOException e) {
-
-            return """
-            <!doctype html><meta charset="utf-8">
-            <title>Kích hoạt tài khoản</title>
-            <body style="font-family:system-ui;padding:32px">
-              <h2>✅ Kích hoạt tài khoản thành công</h2>
-              <p>Bạn có thể đóng tab này và quay lại ứng dụng.</p>
-            </body>
-        """;
+            return fallbackHtml();
         }
+
     }
 
     @Override
@@ -215,6 +208,114 @@ public class AuthServiceImpl implements IAuthService {
         return BaseResponse.success("Đã gửi lại email kích hoạt tới: " + user.getEmail(),
                 "Gửi lại email kích hoạt thành công");
     }
+    private String fallbackHtml() {
+        return """
+        <!doctype html>
+                           <html lang="vi">
+                           <head>
+                               <meta charset="utf-8">
+                               <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                               <title>Kích hoạt tài khoản thành công</title>
+                               <style>
+                                   /* Reset cơ bản */
+                                   body {
+                                       margin: 0;
+                                       padding: 0;
+                                       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                                       background-color: #f3f4f6; /* Màu nền xám nhẹ */
+                                       display: flex;
+                                       justify-content: center;
+                                       align-items: center;
+                                       min-height: 100vh;
+                                   }
+                
+                                   /* Thẻ chứa nội dung */
+                                   .card {
+                                       background: white;
+                                       padding: 40px;
+                                       border-radius: 16px;
+                                       box-shadow: 0 10px 25px rgba(0,0,0,0.05); /* Đổ bóng mềm */
+                                       text-align: center;
+                                       max-width: 400px;
+                                       width: 90%;
+                                       transition: transform 0.3s ease;
+                                   }
+                
+                                   .card:hover {
+                                       transform: translateY(-5px);
+                                   }
+                
+                                   /* Vòng tròn chứa icon */
+                                   .icon-circle {
+                                       width: 80px;
+                                       height: 80px;
+                                       background-color: #d1fae5; /* Xanh lá nhạt */
+                                       border-radius: 50%;
+                                       display: flex;
+                                       justify-content: center;
+                                       align-items: center;
+                                       margin: 0 auto 24px;
+                                   }
+                
+                                   /* Icon dấu tích */
+                                   .checkmark {
+                                       color: #10b981; /* Xanh lá đậm */
+                                       font-size: 40px;
+                                   }
+                
+                                   /* Tiêu đề */
+                                   h2 {
+                                       color: #111827;
+                                       margin: 0 0 12px;
+                                       font-size: 24px;
+                                       font-weight: 700;
+                                   }
+                
+                                   /* Nội dung text */
+                                   p {
+                                       color: #6b7280;
+                                       line-height: 1.6;
+                                       margin: 0 0 32px;
+                                   }
+                
+                                   /* Nút bấm (Button) */
+                                   .btn {
+                                       display: inline-block;
+                                       background-color: #10b981;
+                                       color: white;
+                                       text-decoration: none;
+                                       padding: 12px 24px;
+                                       border-radius: 8px;
+                                       font-weight: 600;
+                                       transition: background-color 0.2s;
+                                       width: 100%; /* Full width trên mobile */
+                                       box-sizing: border-box;
+                                   }
+                
+                                   .btn:hover {
+                                       background-color: #059669;
+                                   }
+                               </style>
+                           </head>
+                           <body>
+                
+                               <div class="card">
+                                   <div class="icon-circle">
+                                       <svg xmlns="http://www.w3.org/2000/svg" class="checkmark" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                           <polyline points="20 6 9 17 4 12"></polyline>
+                                       </svg>
+                                   </div>
+                                   <h2>Kích hoạt thành công!</h2>
+                                   <p>Tài khoản của bạn đã sẵn sàng sử dụng. Bạn có thể đóng tab này hoặc quay lại ứng dụng để đăng nhập.</p>
+                
+                                   <a href="#" class="btn">Quay về trang chủ</a>
+                               </div>
+                
+                           </body>
+                           </html>
+    """;
+    }
+
 
 
 }

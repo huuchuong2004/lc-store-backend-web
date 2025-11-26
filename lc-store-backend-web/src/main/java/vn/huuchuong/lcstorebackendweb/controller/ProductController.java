@@ -140,4 +140,9 @@ public class ProductController {
         return ResponseEntity.ok(new BaseResponse<>(page,"Tim kiem thanh cong"));
 
     }
+
+    // 12 lay danh sach theo tree
+    public ResponseEntity<BaseResponse<Page<ProductListResponse>>> getProductsByCategorys(Integer categoryId, Pageable pageable) {
+            return ResponseEntity.ok(new BaseResponse<>(productService.getProductByCategpgys(categoryId,pageable),"Lay danh sach thanh cong"));
+    }
 }
