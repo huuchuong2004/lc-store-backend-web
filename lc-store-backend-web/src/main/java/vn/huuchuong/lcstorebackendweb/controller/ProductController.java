@@ -18,7 +18,7 @@ import vn.huuchuong.lcstorebackendweb.service.IProductService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -143,7 +143,7 @@ public class ProductController {
 
     // 12 lay danh sach theo tree
     @GetMapping("/categories/{id}/products")
-    public ResponseEntity<BaseResponse<Page<ProductListResponse>>> getProductsByCategorys( @PathVariable Integer categoryId, Pageable pageable) {
-            return ResponseEntity.ok(new BaseResponse<>(productService.getProductByCategpgys(categoryId,pageable),"Lay danh sach thanh cong"));
+    public ResponseEntity<BaseResponse<Page<ProductListResponse>>> getProductsByCategorys( @PathVariable Integer id, Pageable pageable) {
+            return ResponseEntity.ok(new BaseResponse<>(productService.getProductByCategpgys(id,pageable),"Lay danh sach thanh cong"));
     }
 }

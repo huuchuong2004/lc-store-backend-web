@@ -222,7 +222,7 @@ public class ProductServiceImpl implements IProductService {
             throw new BusinessException("Biến thể này đã tồn tại");
         }
 
-        // Tạo variant mới
+        // 1. Tạo variant mới
         ProductVariant variant = new ProductVariant();
         variant.setProduct(product);
         variant.setSize(req.getSize());
@@ -230,30 +230,34 @@ public class ProductServiceImpl implements IProductService {
         variant.setPrice(req.getPrice());
         variant.setQuantityInStock(req.getQuantityInStock());
 
-        // Gen sku nếu rỗng
         String sku = req.getSku();
         if (sku == null || sku.isBlank()) {
             sku = generateUniqueSku(product, req);
         }
         variant.setSku(sku);
 
-        // Lưu variant vào product
-        product.getVariants().add(variant);
+        // 2. Lưu variant riêng để nó có ID (rất quan trọng)
+        ProductVariant savedVariant = productVariantRepository.save(variant);
 
-        // Lưu product để variant có ID
-        Product saved = productRepository.save(product);
+        // 3. Đồng bộ lại vào list của product (cho mapper dùng)
+        product.getVariants().add(savedVariant);
 
-
+        // 4. Tạo inventory liên kết với variant ĐÃ LƯU
         Inventory inventory = new Inventory();
-        inventory.setProductVariant(variant);
-        inventory.setCurrentStockLevel(variant.getQuantityInStock());
+        inventory.setProductVariant(savedVariant);
+        inventory.setCurrentStockLevel(savedVariant.getQuantityInStock());
         inventory.setLastUpdate(LocalDate.now());
 
         inventoryRepository.save(inventory);
 
-        // ================================
+        // 5. (tuỳ chọn) Lưu lại product nếu bạn muốn đồng bộ 2 chiều
+        productRepository.save(product);
 
-        return productMapper.toProductResponse(saved);
+        // 6. Lấy product mới nhất để trả về
+        Product productLatest = productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException("Sản phẩm không tồn tại"));
+
+        return productMapper.toProductResponse(productLatest);
     }
 
 
