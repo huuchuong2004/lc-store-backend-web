@@ -444,6 +444,37 @@ public class ProductServiceImpl implements IProductService {
 
     }
 
+    @Override
+    @Transactional
+    public void deleteImageByUrl(Integer productId, String imageUrl) {
+        // 1. Kiểm tra sản phẩm tồn tại
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException("Sản phẩm không tồn tại"));
+
+        // 2. Tìm ảnh có URL tương ứng trong danh sách ảnh của sản phẩm
+        ProductImage imageToDelete = null;
+
+        if (product.getImages() != null) {
+            for (ProductImage img : product.getImages()) {
+                // So sánh URL (lưu ý: imageUrl gửi lên có thể cần decode nếu bị encode)
+                if (img.getImageURL() != null && img.getImageURL().equals(imageUrl)) {
+                    imageToDelete = img;
+                    break;
+                }
+            }
+        }
+
+        if (imageToDelete == null) {
+            throw new BusinessException("Ảnh không tồn tại hoặc không thuộc về sản phẩm này");
+        }
+
+        // 3. Xóa khỏi danh sách của Product (để Hibernate cập nhật quan hệ)
+        product.getImages().remove(imageToDelete);
+
+        // 4. Xóa khỏi Database
+        productImageRepository.delete(imageToDelete);
+    }
+
     // ======================== SKU HELPER ============================
 
     private String generateUniqueSku(Product product, CreateProductVariantRequest req) {

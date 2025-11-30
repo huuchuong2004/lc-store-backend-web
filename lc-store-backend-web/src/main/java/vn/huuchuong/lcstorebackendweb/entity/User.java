@@ -1,4 +1,7 @@
 package vn.huuchuong.lcstorebackendweb.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +12,7 @@ import vn.huuchuong.lcstorebackendweb.base.BaseEntity;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,28 +21,28 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "users",
-        indexes = @Index(name = "idx_users_email", columnList = "email"), // truy van login sieu nhanh
-        uniqueConstraints = {@UniqueConstraint(name = "uq_users_email", columnNames = "email") // dam bao ko co 2 user nao trugn email
-                ,  @UniqueConstraint(name = "uq_users_username", columnNames = "username"),@UniqueConstraint(name="uq_users_password",columnNames = "password") }// ngan trung du lieu
+        indexes = @Index(name = "idx_users_email", columnList = "email"),
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_users_email", columnNames = "email"),
+                @UniqueConstraint(name = "uq_users_username", columnNames = "username"),
+                @UniqueConstraint(name="uq_users_password",columnNames = "password")
+        }
 )
 public class User extends BaseEntity {
-    // neu ke thua toi basse thi usser ko can phai co createat ma tu dong co , va tu dong trong bang sser se co 2 dong ben baseentity
 
-
-    // Chỉ user dùng UUID
     @Id
     @Column(name = "id", columnDefinition = "CHAR(36)", length = 36, updatable = false, nullable = false)
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @NotBlank
-    @Column(name = "username",nullable = false)
-    private String username;
-
-    @PrePersist // truoc khi duoc luu vao du lieu thi thuc hien dong nay
+    @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
     }
+
+    @NotBlank
+    @Column(name = "username", nullable = false)
+    private String username;
 
     @Email
     @NotBlank
@@ -46,7 +50,7 @@ public class User extends BaseEntity {
     private String email;
 
     @NotBlank
-    @Column(name="password" ,nullable = false, length = 255)
+    @Column(name = "password", nullable = false, length = 255)
     private String password;
 
     @Column(length = 150)
@@ -62,17 +66,19 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private BigDecimal amount = BigDecimal.ZERO;
 
-    @Column(nullable = false)
-
     @Builder.Default
+    @Column(nullable = false)
     private Boolean isActive = false;
-
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-
     @Builder.Default
-    private Role role = Role.USER; // default is user
+    private Role role = Role.USER;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Cart cart;
 }
+
 
 

@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import vn.huuchuong.lcstorebackendweb.base.BaseResponse;
 
+import vn.huuchuong.lcstorebackendweb.exception.BusinessException;
 import vn.huuchuong.lcstorebackendweb.payload.request.product.*;
 import vn.huuchuong.lcstorebackendweb.payload.response.ProductListResponse;
 import vn.huuchuong.lcstorebackendweb.payload.response.ProductResponse;
@@ -123,15 +124,26 @@ public class ProductController {
     }
 
     // 10. Delete image
-    @DeleteMapping("/{productId}/images/{imageId}")
+    // Xóa ảnh (Hỗ trợ cả ID hoặc URL)
+    @DeleteMapping("/{productId}/images")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BaseResponse<String>> deleteImage(
             @PathVariable Integer productId,
-            @PathVariable Integer imageId) {
-        productService.deleteImage(productId, imageId);
+            @RequestParam(required = false) Integer imageId,
+            @RequestParam(required = false) String imageUrl) {
+
+        if (imageId != null) {
+            productService.deleteImage(productId, imageId);
+        } else if (imageUrl != null) {
+            // Bạn cần thêm hàm deleteImageByUrl trong Service nếu chưa có
+            // Hoặc tự viết logic tìm ảnh có url tương ứng và xóa
+            productService.deleteImageByUrl(productId, imageUrl);
+        } else {
+            throw new BusinessException("Cần cung cấp imageId hoặc imageUrl để xóa");
+        }
+
         return ResponseEntity.ok(BaseResponse.success("Xóa ảnh thành công"));
     }
-
     // 11. Hàm tìm kiếm theo tên...
     @GetMapping("search")
     public ResponseEntity<BaseResponse<Page<ProductListResponse>>> search(@ModelAttribute ProductFilter productFilter,Pageable pageable) {

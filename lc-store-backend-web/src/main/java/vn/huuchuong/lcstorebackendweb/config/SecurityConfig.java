@@ -41,10 +41,14 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/active/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/categories","/api/v1/products").hasAnyAuthority("ROLE_ADMIN","ROLE_USER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/categorys/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products").hasAnyAuthority("ROLE_ADMIN","ROLE_USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/*").authenticated() // se cho phep dc token dc nao preautho di qua
                         .requestMatchers("/api/v1/users/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
+
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req,res,e)->{

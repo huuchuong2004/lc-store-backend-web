@@ -34,4 +34,6 @@ public interface IProductService {
     Page search(ProductFilter productFilter, Pageable pageable);
 
     Page<ProductListResponse> getProductByCategpgys(Integer categoryId, Pageable pageable);
+
+    void deleteImageByUrl(Integer productId, String imageUrl);
 }
