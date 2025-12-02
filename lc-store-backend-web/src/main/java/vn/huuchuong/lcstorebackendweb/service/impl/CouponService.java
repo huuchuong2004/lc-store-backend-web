@@ -4,13 +4,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import vn.huuchuong.lcstorebackendweb.entity.Coupon;
+import vn.huuchuong.lcstorebackendweb.entity.CouponUsage;
+import vn.huuchuong.lcstorebackendweb.entity.Order;
 import vn.huuchuong.lcstorebackendweb.payload.request.coupon.CreateCouponRequest;
 import vn.huuchuong.lcstorebackendweb.payload.response.CouponResponse;
 import vn.huuchuong.lcstorebackendweb.repository.ICouponRepository;
+import vn.huuchuong.lcstorebackendweb.repository.IOrderRepository;
 import vn.huuchuong.lcstorebackendweb.service.ICouponService;
+import vn.huuchuong.lcstorebackendweb.service.IOrderService;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,9 +24,10 @@ import java.util.Optional;
 public class CouponService  implements ICouponService {
 
     private final ICouponRepository couponRepository;
+    private final IOrderRepository orderRepository;
     @Override
-    public Page<Coupon> getCoupons(Pageable pageable) {
-        return couponRepository.findAll(pageable);
+    public Page<CouponResponse> getCoupons(Pageable pageable) {
+        return couponRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Override
@@ -45,14 +52,25 @@ public class CouponService  implements ICouponService {
     }
 
     @Override
+    @Transactional
     public Boolean deleteCoupon(Integer id) {
+        Coupon couponToDelete = couponRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Coupon not found"));
 
-       if (!couponRepository.existsById(id)) {
-           throw new RuntimeException("Coupon not found");
-       }
-         couponRepository.deleteById(id);
-            return true;
+        // vẫn nên ngắt Order vì Order.coupon là optional
+        List<Order> ordersUsingCoupon = orderRepository.findByCoupon(couponToDelete);
+        for (Order order : ordersUsingCoupon) {
+            order.setCoupon(null);
+        }
+        orderRepository.saveAll(ordersUsingCoupon);
+
+        couponRepository.delete(couponToDelete); // DB tự xóa coupon_usage
+
+        return true;
     }
+
+
+
 
     private CouponResponse toResponse(Coupon c) {
         return CouponResponse.builder()

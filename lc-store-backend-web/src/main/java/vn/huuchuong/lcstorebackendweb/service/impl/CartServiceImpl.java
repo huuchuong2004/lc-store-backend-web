@@ -192,6 +192,13 @@ public class CartServiceImpl implements ICartService {
             BigDecimal subtotal = v.getPrice()
                     .multiply(BigDecimal.valueOf(item.getQuantity()));
 
+            // Build image URL list from product images (defensive: handle null)
+            List<String> images = (v.getProduct().getImages() == null)
+                    ? List.of()
+                    : v.getProduct().getImages().stream()
+                        .map(img -> img.getImageURL()) // assumes ProductImage has getUrl()
+                        .toList();
+
             return CartItemResponse.builder()
                     .cartItemId(item.getCartItemId())
                     .productVariantId(v.getProductVariantId())
@@ -201,6 +208,7 @@ public class CartServiceImpl implements ICartService {
                     .price(v.getPrice())
                     .quantity(item.getQuantity())
                     .subtotal(subtotal)
+                    .images(images) // <-- new field populated here
                     .build();
         }).toList();
 

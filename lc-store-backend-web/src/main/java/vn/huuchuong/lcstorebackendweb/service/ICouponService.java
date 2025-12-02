@@ -7,7 +7,7 @@ import vn.huuchuong.lcstorebackendweb.payload.request.coupon.CreateCouponRequest
 import vn.huuchuong.lcstorebackendweb.payload.response.CouponResponse;
 
 public interface ICouponService {
-    Page<Coupon> getCoupons(Pageable pageable);
+    Page<CouponResponse> getCoupons(Pageable pageable);
 
     CouponResponse createCoupon(CreateCouponRequest request);
 

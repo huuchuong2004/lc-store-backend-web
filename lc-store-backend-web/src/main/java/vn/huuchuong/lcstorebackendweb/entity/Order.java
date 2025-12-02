@@ -2,8 +2,12 @@ package vn.huuchuong.lcstorebackendweb.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import vn.huuchuong.lcstorebackendweb.entity.enumconfig.OrderStatus;
+import vn.huuchuong.lcstorebackendweb.entity.enumconfig.PaymentMethodType;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,15 +34,21 @@ public class Order {
     @JoinColumn(name = "coupon_id")
     private Coupon coupon;
 
-    private LocalDate orderDate;
+    private LocalDateTime orderDate;
 
     @Column(nullable = false)
     private BigDecimal totalAmount;
 
     private String shippingAddress;
 
-    @Column(length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    private OrderStatus status;
+
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    private List<Payment> payments;
+
+
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();

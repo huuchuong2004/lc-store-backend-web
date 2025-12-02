@@ -2,12 +2,14 @@ package vn.huuchuong.lcstorebackendweb.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import vn.huuchuong.lcstorebackendweb.base.BaseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -50,4 +52,9 @@ public class Coupon extends BaseEntity {
 
     @Column(nullable = false)
     private Integer currentUsage; // tổng số lần đã dùng
+
+    @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL, orphanRemoval = true)
+
+    private List<CouponUsage> couponUsages;
+
 }

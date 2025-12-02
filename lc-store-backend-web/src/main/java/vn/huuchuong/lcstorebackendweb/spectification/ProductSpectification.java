@@ -28,18 +28,18 @@ public class ProductSpectification {
     }
 
     public static Specification<Product> hasMinPrice(BigDecimal minPrice) {
-        // cu phap , root , query , builder
         return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.greaterThanOrEqualTo(criteriaBuilder.lower(root.get("baseprice")), "%"+ minPrice +"%");
-
+            if (minPrice == null) return null;
+            // So sánh trực tiếp số: baseprice >= minPrice
+            return criteriaBuilder.greaterThanOrEqualTo(root.get("baseprice"), minPrice);
         };
     }
 
     public static Specification<Product> hasMaxPrice(BigDecimal maxPrice) {
-        // cu phap , root , query , builder
         return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.lessThanOrEqualTo(criteriaBuilder.lower(root.get("baseprice")), "%"+ maxPrice +"%");
-
+            if (maxPrice == null) return null;
+            // So sánh trực tiếp số: baseprice <= maxPrice
+            return criteriaBuilder.lessThanOrEqualTo(root.get("baseprice"), maxPrice);
         };
     }
 }

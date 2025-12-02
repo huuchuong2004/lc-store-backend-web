@@ -6,11 +6,9 @@ spring:
     name: lc-store
 
   datasource:
-
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3307/lc-store-db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true}
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:root}
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -24,6 +22,12 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+vnpay:
+  tmn-code: VTV4XSAT
+  hash-secret: 6AAFT1IU4WA8AK3H1UMDRDWLN6YICMCO
+  pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  return-url: http://localhost:3000/html/PaymentResult.html
 
 
 

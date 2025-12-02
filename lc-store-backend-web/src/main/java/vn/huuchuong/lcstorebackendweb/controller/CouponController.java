@@ -19,12 +19,12 @@ public class CouponController {
     private final ICouponService couponService;
 
     @GetMapping
-    public BaseResponse<Page<Coupon>>  getCoupons(Pageable pageable) {
+    public BaseResponse<Page<CouponResponse>>  getCoupons(Pageable pageable) {
         return BaseResponse.success(couponService.getCoupons(pageable), "Lấy danh sách coupon thành công");
     }
 
     @PostMapping
-    public BaseResponse<CouponResponse> createCoupon(CreateCouponRequest request) {
+    public BaseResponse<CouponResponse> createCoupon( @RequestBody CreateCouponRequest request) {
         return BaseResponse.success(couponService.createCoupon(request), "Tạo coupon thành công");
     }
 
