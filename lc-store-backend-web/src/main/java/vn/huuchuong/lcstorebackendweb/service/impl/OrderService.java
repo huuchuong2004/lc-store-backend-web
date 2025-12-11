@@ -304,6 +304,21 @@ public class OrderService implements IOrderService {
                 .build();
     }
 
+    @Override
+    public int countOrdersByStatusDeliverred() {
+        return orderRepository.countByStatus(OrderStatus.DELIVERED);
+    }
+
+    @Override
+    public int countTotalOrders() {
+        return orderRepository.countAllOrders();
+    }
+
+    @Override
+    public BigDecimal getTotalRevenue() {
+        return orderRepository.sumTotalAmountByStatus(OrderStatus.DELIVERED);
+    }
+
 
     private OrderResponse mapToOrderResponse(Order order) {
         List<OrderItemResponse> itemResponses = order.getItems().stream().map(oi -> {

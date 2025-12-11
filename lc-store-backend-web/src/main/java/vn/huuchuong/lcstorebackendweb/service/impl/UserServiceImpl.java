@@ -201,6 +201,11 @@ public class UserServiceImpl implements IUserService {
         userRepository.save(user);
     }
 
+    @Override
+    public Integer countUserByRole() {
+        return userRepository.countUserByRole();
+    }
+
 
 }
 

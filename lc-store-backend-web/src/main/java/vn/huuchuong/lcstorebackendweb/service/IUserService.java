@@ -29,4 +29,7 @@ public interface IUserService {
 
 
     void patch(UUID id, @Valid ProfileUpdateRequest req);
+
+
+    Integer countUserByRole();
 }

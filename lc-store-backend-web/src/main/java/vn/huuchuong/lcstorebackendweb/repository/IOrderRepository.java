@@ -8,7 +8,9 @@ import org.springframework.data.repository.query.Param;
 import vn.huuchuong.lcstorebackendweb.entity.Coupon;
 import vn.huuchuong.lcstorebackendweb.entity.Order;
 import vn.huuchuong.lcstorebackendweb.entity.User;
+import vn.huuchuong.lcstorebackendweb.entity.enumconfig.OrderStatus;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,4 +43,13 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>  {
  Page<Order> findByUserFetchItems(@Param("user") User user, Pageable pageable);
 
     List<Order> findByCoupon(Coupon couponToDelete);
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.status = :orderStatus")
+    int countByStatus(OrderStatus orderStatus);
+
+    @Query("SELECT COUNT(o) FROM Order o")
+    int countAllOrders();
+
+    @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.status = :orderStatus")
+    BigDecimal sumTotalAmountByStatus(OrderStatus orderStatus);
 }

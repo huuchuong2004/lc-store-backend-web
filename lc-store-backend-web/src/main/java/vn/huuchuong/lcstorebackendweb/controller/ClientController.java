@@ -85,6 +85,13 @@ public class ClientController {
         return ResponseEntity.ok(new BaseResponse<>(page, "Lấy danh sách thành công"));
     }
 
+    @GetMapping("/count-by-role")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<BaseResponse<Integer>> CountUserByRole() {
+        return ResponseEntity.ok(new BaseResponse<>(userService.countUserByRole(), "Đếm số lượng user theo role thành công"));
+
+    }
+
 
 
 

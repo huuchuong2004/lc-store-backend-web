@@ -14,6 +14,7 @@ import vn.huuchuong.lcstorebackendweb.payload.request.order.UserOrderResponse;
 import vn.huuchuong.lcstorebackendweb.service.IOrderService;
 import vn.huuchuong.lcstorebackendweb.service.impl.OrderService;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -90,6 +91,29 @@ public class OrderController {
         boolean result = ((OrderService) orderService).setStatusIsDelivered(orderId);
         return ResponseEntity.ok(BaseResponse.success(result, "Cập nhật trạng thái đơn hàng thành công (Da giao hang thanh cong)"));
     }
+
+    @GetMapping("/count-by-status-deliverred")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<BaseResponse<Integer>> countOrdersByStatusDeliverred() {
+        int count =  orderService.countOrdersByStatusDeliverred();
+        return ResponseEntity.ok(BaseResponse.success(count, "Đếm số lượng đơn hàng đã giao thành công thành công"));
+    }
+
+    @GetMapping("/count-orders")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<BaseResponse<Integer>> countTotalOrders() {
+        int count =  orderService.countTotalOrders();
+        return ResponseEntity.ok(BaseResponse.success(count, "Đếm tổng số lượng đơn hàng thành công"));
+    }
+
+    @GetMapping("/revenue/total")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<BaseResponse<BigDecimal>> getTotalRevenue() {
+        BigDecimal revenue =  orderService.getTotalRevenue();
+        return ResponseEntity.ok(BaseResponse.success(revenue, "Lấy tổng doanh thu thành công"));
+    }
+
+
 
 
 }

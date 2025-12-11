@@ -7,6 +7,7 @@ import vn.huuchuong.lcstorebackendweb.payload.request.order.CheckoutRequest;
 import vn.huuchuong.lcstorebackendweb.payload.request.order.OrderResponse;
 import vn.huuchuong.lcstorebackendweb.payload.request.order.UserOrderResponse;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface IOrderService  {
@@ -23,4 +24,10 @@ public interface IOrderService  {
     OrderResponse getDetailsAdminRole(Integer orderId);
 
     UserOrderResponse getUserByOrderId(Integer orderId);
+
+    int countOrdersByStatusDeliverred();
+
+    int countTotalOrders();
+
+    BigDecimal getTotalRevenue();
 }

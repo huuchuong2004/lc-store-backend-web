@@ -58,7 +58,7 @@ public class AuthServiceImpl implements IAuthService {
             return BaseResponse.error("Sai username hoặc password");
         }
 
-        // 👉 Dùng ModelMapper để map User -> LoginUserResponse
+
         LoginUserResponse account = modelMapper.map(user, LoginUserResponse.class);
 
         refreshTokenService.revokeByUsernameAndUserAgent(user.getUsername(), httpReq.getHeader("User-Agent")); // se xoa di rfresh token cu neu login
