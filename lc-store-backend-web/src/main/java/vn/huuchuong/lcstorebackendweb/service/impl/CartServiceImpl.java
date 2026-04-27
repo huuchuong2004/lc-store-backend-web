@@ -16,6 +16,8 @@ import vn.huuchuong.lcstorebackendweb.service.IUserService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +30,9 @@ public class CartServiceImpl implements ICartService {
     private final ICartItemRepository cartItemRepository;
     private final IProductVariantRepository productVariantRepository;
     private final InventoryRepository inventoryRepository;
+
+    private static final ZoneId APP_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final long CART_HOLD_MINUTES = 30;
 
     public Cart getOrCreateCart(User user) {
 
@@ -42,7 +47,7 @@ public class CartServiceImpl implements ICartService {
         cart.setCreatedAt(LocalDate.now().atStartOfDay());
         cart.setUpdatedAt(LocalDate.now().atStartOfDay());
 
-        // Set vào user (để quan hệ 2 chiều hoạt động)
+
         user.setCart(cart);
 
         return cartRepository.save(cart);
@@ -55,10 +60,25 @@ public class CartServiceImpl implements ICartService {
 
     }
 
+    private LocalDateTime now() {
+        return LocalDateTime.now(APP_ZONE);
+    }
+
+    private void purgeExpiredItems(Cart cart) {
+        LocalDateTime current = now();
+        boolean removed = cart.getItems().removeIf(ci ->
+                ci.getReservedUntil() != null && ci.getReservedUntil().isBefore(current));
+        if (removed) {
+            cart.setUpdatedAt(current);
+            cartRepository.save(cart);
+        }
+    }
+
     @Override
     public CartResponse getMyCart() {
         User u = getCurrentUser();
         Cart cart = getOrCreateCart(u);
+        purgeExpiredItems(cart);
         // Chuyển Cart entity sang CartResponse và trả về
         return mapToCartResponse(cart);
     }
@@ -73,6 +93,9 @@ public class CartServiceImpl implements ICartService {
 
         User user = getCurrentUser();
         Cart cart = getOrCreateCart(user);
+        purgeExpiredItems(cart);
+
+        LocalDateTime current = now();
 
         ProductVariant variant = productVariantRepository.findById(request.getProductVariantId())
                 .orElseThrow(() -> new BusinessException("Biến thể sản phẩm không tồn tại"));
@@ -88,22 +111,26 @@ public class CartServiceImpl implements ICartService {
 
         if (exist.isPresent()) {
             CartItem item = exist.get();
-            int newQty = item.getQuantity() + request.getQuantity();
+            boolean expired = item.getReservedUntil() != null && item.getReservedUntil().isBefore(current);
+            int baseQty = expired ? 0 : item.getQuantity();
+            int newQty = baseQty + request.getQuantity();
 
             if (newQty > inventory.getCurrentStockLevel()) {
                 throw new BusinessException("Số lượng vượt quá tồn kho hiện tại");
             }
 
             item.setQuantity(newQty);
+            item.setReservedUntil(current.plusMinutes(CART_HOLD_MINUTES));
         } else {
             CartItem item = new CartItem();
             item.setCart(cart);
             item.setProductVariant(variant);
             item.setQuantity(request.getQuantity());
+            item.setReservedUntil(current.plusMinutes(CART_HOLD_MINUTES));
             cart.getItems().add(item);
         }
 
-        cart.setUpdatedAt(LocalDate.now().atStartOfDay());
+        cart.setUpdatedAt(current);
         cartRepository.save(cart);
 
         // reload lại với fetch join cho chắc (tránh lazy + mapping)
@@ -121,11 +148,18 @@ public class CartServiceImpl implements ICartService {
 
         User user = getCurrentUser();
         Cart cart = getOrCreateCart(user);
+        purgeExpiredItems(cart);
+
+        LocalDateTime current = now();
 
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new BusinessException("Sản phẩm trong giỏ không tồn tại"));
         if (!item.getCart().getCartId().equals(cart.getCartId())) {
             throw new BusinessException("Sản phẩm không thuộc giỏ hàng của bạn");
+        }
+
+        if (item.getReservedUntil() != null && item.getReservedUntil().isBefore(current)) {
+            throw new BusinessException("Sản phẩm đã hết hạn giữ, vui lòng thêm lại vào giỏ");
         }
 
         Inventory inventory = inventoryRepository.findByProductVariant(item.getProductVariant())
@@ -135,7 +169,8 @@ public class CartServiceImpl implements ICartService {
             throw new BusinessException("Chỉ còn " + inventory.getCurrentStockLevel() + " sản phẩm trong kho");
         }
         item.setQuantity(request.getQuantity());
-        cart.setUpdatedAt(LocalDate.now().atStartOfDay());
+        item.setReservedUntil(current.plusMinutes(CART_HOLD_MINUTES));
+        cart.setUpdatedAt(current);
         cartRepository.save(cart);
 
         Cart reloaded = cartRepository.findByUserFetchItems(user)
@@ -156,7 +191,7 @@ public class CartServiceImpl implements ICartService {
             throw new BusinessException("Sản phẩm không thuộc giỏ hàng của bạn");
         }
         cart.getItems().remove(item);
-        cart.setUpdatedAt(LocalDate.now().atStartOfDay());
+        cart.setUpdatedAt(now());
         cartRepository.save(cart);
         Cart reloaded = cartRepository.findByUserFetchItems(user)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy giỏ hàng sau khi xóa"));
@@ -172,7 +207,7 @@ public class CartServiceImpl implements ICartService {
 
             cart.getItems().clear();
             cartItemRepository.deleteAllByCart(cart);
-            cart.setUpdatedAt(LocalDate.now().atStartOfDay());
+            cart.setUpdatedAt(now());
             cartRepository.save(cart);
 
             // cart lúc này không có item, fetch cũng ok

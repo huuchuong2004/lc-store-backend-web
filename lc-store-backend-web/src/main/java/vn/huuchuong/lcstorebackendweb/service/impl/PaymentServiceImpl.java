@@ -4,10 +4,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.huuchuong.lcstorebackendweb.base.BaseResponse;
 import vn.huuchuong.lcstorebackendweb.config.VnPayConfig;
 import vn.huuchuong.lcstorebackendweb.entity.Order;
 import vn.huuchuong.lcstorebackendweb.entity.Payment;
 import vn.huuchuong.lcstorebackendweb.entity.PaymentMethod;
+import vn.huuchuong.lcstorebackendweb.entity.User;
 import vn.huuchuong.lcstorebackendweb.entity.enumconfig.OrderStatus;
 import vn.huuchuong.lcstorebackendweb.entity.enumconfig.PaymentMethodType;
 import vn.huuchuong.lcstorebackendweb.entity.enumconfig.PaymentStatus;
@@ -39,6 +41,7 @@ public class PaymentServiceImpl {
     private final IOrderRepository orderRepository;
     private final VnPayConfig vnPayConfig;
     private final IInvoiceService invoiceService;
+    private final MailSenderService mailSenderService;
 
     // ====================== VNPay: Tạo payment + link thanh toán ======================
 
@@ -49,9 +52,11 @@ public class PaymentServiceImpl {
         Order order = orderRepository.findById(req.getOrderId())
                 .orElseThrow(() -> new BusinessException("Đơn hàng không tồn tại"));
 
-        if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.PENDING) {
-            throw new BusinessException("Trạng thái đơn hàng không hợp lệ để thanh toán");
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new BusinessException("Trạng thái đơn hàng không hợp lệ để tạo thanh toán");
         }
+
+        User user = order.getUser();
 
         PaymentMethod method = paymentMethodRepository.findByCode(PaymentMethodType.VNPAY)
                 .orElseThrow(() -> new BusinessException("Chưa cấu hình phương thức VNPAY"));
@@ -122,6 +127,8 @@ public class PaymentServiceImpl {
         payment.setPayUrl(payUrl);
         paymentRepository.save(payment);
 
+
+
         return CreateVnPayPaymentResponse.builder()
                 .paymentId(payment.getPaymentId())
                 .payUrl(payUrl)
@@ -175,7 +182,13 @@ public class PaymentServiceImpl {
         String bankTranNo = allParams.get("vnp_BankTranNo");
 
         Payment payment = paymentRepository.findByTxnRef(txnRef)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy giao dịch thanh toán"));
+            .orElseThrow(() -> new BusinessException("Không tìm thấy giao dịch thanh toán"));
+
+        Order order = payment.getOrder();
+
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            throw new BusinessException("Đơn hàng đã bị hủy, không thể xác nhận thanh toán");
+        }
 
         // Nếu đã success từ IPN rồi thì chỉ trả responseCode cho FE
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
@@ -189,12 +202,10 @@ public class PaymentServiceImpl {
         payment.setPaymentDate(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
 
 
-        Order order = payment.getOrder();
-
         if ("00".equals(responseCode)) {
             payment.setStatus(PaymentStatus.SUCCESS);
 
-            if (order.getStatus() == OrderStatus.CREATED || order.getStatus() == OrderStatus.PENDING) {
+            if (order.getStatus() == OrderStatus.CREATED) {
                 order.setStatus(OrderStatus.CONFIRMED);
             }
 
@@ -219,7 +230,9 @@ public class PaymentServiceImpl {
         Order order = orderRepository.findById(req.getOrderId())
                 .orElseThrow(() -> new BusinessException("Đơn hàng không tồn tại"));
 
-        if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.PENDING) {
+        User user = order.getUser();
+
+        if (order.getStatus() != OrderStatus.CREATED) {
             throw new BusinessException("Trạng thái đơn hàng không hợp lệ để tạo thanh toán COD");
         }
 
@@ -239,6 +252,18 @@ public class PaymentServiceImpl {
         order.setStatus(OrderStatus.CONFIRMED);
         orderRepository.save(order);
 
+        BaseResponse<String> mailResult =
+                mailSenderService.sendConfirmOrder(user.getEmail(), order);
+
+        String message;
+        if (mailResult.getData() == null) {
+            message = "Đặt hàng thành công nhưng gửi email xác nhận thất bại: "
+                    + mailResult.getMessage();
+        } else {
+            message = "Đặt hàng thành công! Vui lòng kiểm tra email để xem chi tiết đơn hàng.";
+        }
+
+
         return saved;
     }
 
@@ -251,7 +276,7 @@ public class PaymentServiceImpl {
         allParams.remove("vnp_SecureHash");
         allParams.remove("vnp_SecureHashType");
 
-        // Build lại chuỗi để verify
+        // Build lại chuỗi để verify (có encode giá trị trước khi hash)
         List<String> fieldNames = new ArrayList<>(allParams.keySet());
         Collections.sort(fieldNames);
 
@@ -260,7 +285,13 @@ public class PaymentServiceImpl {
             String fieldValue = allParams.get(fieldName);
             if (fieldValue != null && !fieldValue.isEmpty()) {
                 if (hashData.length() > 0) hashData.append('&');
-                hashData.append(fieldName).append('=').append(fieldValue);
+                try {
+                    hashData.append(fieldName)
+                            .append('=')
+                            .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -281,11 +312,20 @@ public class PaymentServiceImpl {
         String bankTranNo = allParams.get("vnp_BankTranNo");
 
         Payment payment = paymentRepository.findByTxnRef(txnRef)
-                .orElse(null);
+            .orElse(null);
 
         if (payment == null) {
             res.put("RspCode", "01");
             res.put("Message", "Order not found");
+            return res;
+        }
+
+        Order order = payment.getOrder();
+
+        // Đơn đã hủy -> từ chối xác nhận thanh toán
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            res.put("RspCode", "02");
+            res.put("Message", "Order was canceled");
             return res;
         }
 
@@ -303,12 +343,25 @@ public class PaymentServiceImpl {
         payment.setPaymentDate(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
 
 
-        Order order = payment.getOrder();
-
         if ("00".equals(responseCode)) {
             payment.setStatus(PaymentStatus.SUCCESS);
 
-            if (order.getStatus() == OrderStatus.CREATED || order.getStatus() == OrderStatus.PENDING) {
+            BaseResponse<String> mailResult =
+                    mailSenderService.sendConfirmOrder(order.getUser().getEmail(), order);
+
+            String message;
+            if (mailResult.getData() == null) {
+                message = "Đặt hàng thành công nhưng gửi email xác nhận thất bại: "
+                        + mailResult.getMessage();
+            } else {
+                message = "Đặt hàng thành công! Vui lòng kiểm tra email để xem chi tiết đơn hàng.";
+            }
+
+
+
+
+
+            if (order.getStatus() == OrderStatus.CREATED) {
                 order.setStatus(OrderStatus.CONFIRMED);
             }
 
@@ -357,13 +410,12 @@ public class PaymentServiceImpl {
 
 
         Order order = payment.getOrder();
-
-        // COD: thu tiền xong xem như giao xong (tuỳ business)
-        if (order.getStatus() == OrderStatus.CONFIRMED
-                || order.getStatus() == OrderStatus.SHIPPING
-                || order.getStatus() == OrderStatus.CREATED) {
-            order.setStatus(OrderStatus.DELIVERED);
+        if (order.getStatus() != OrderStatus.SHIPPING && order.getStatus() != OrderStatus.CONFIRMED) {
+            throw new BusinessException("Chỉ xác nhận COD khi đơn đã được xác nhận hoặc đang giao (CONFIRMED/SHIPPING)");
         }
+
+        // COD: thu tiền xong xem như giao xong
+        order.setStatus(OrderStatus.DELIVERED);
 
         paymentRepository.save(payment);
         orderRepository.save(order);

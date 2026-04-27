@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "cart_item")
 @Getter
@@ -30,4 +32,8 @@ public class CartItem {
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
+
+    // Giữ hàng tạm thời cho item, hết hạn sẽ cần gia hạn hoặc xoá khỏi giỏ
+    @Column(name = "reserved_until")
+    private LocalDateTime reservedUntil;
 }

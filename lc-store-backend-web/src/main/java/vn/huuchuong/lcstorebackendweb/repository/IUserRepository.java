@@ -20,6 +20,10 @@ public interface IUserRepository extends JpaRepository<User, UUID>, JpaSpecifica
     boolean existsByEmail(String email);
     Optional<User> findByEmail(String email);
 
+
+    boolean existsByPhone(String phone);
+
+
     @Query("SELECT COUNT(u) FROM User u WHERE u.role = 'USER'")
     Integer countUserByRole();
 }

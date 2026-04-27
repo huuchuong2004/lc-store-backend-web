@@ -13,6 +13,7 @@ import vn.huuchuong.lcstorebackendweb.entity.enumconfig.OrderStatus;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface IOrderRepository extends JpaRepository<Order, Integer>  {
     @Query("""
@@ -52,4 +53,16 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>  {
 
     @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.status = :orderStatus")
     BigDecimal sumTotalAmountByStatus(OrderStatus orderStatus);
+
+    List<Order> findByUserId(UUID userId);
+
+    @Query("""
+    select distinct o from Order o
+    left join fetch o.items i
+    left join fetch i.productVariant pv
+    left join fetch pv.product p
+    left join fetch o.user u
+    where o.orderId = :orderId
+""")
+    Optional<Order> findByIdWithItems(@Param("orderId") Integer orderId);
 }

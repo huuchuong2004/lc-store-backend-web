@@ -113,6 +113,11 @@ public class OrderController {
         return ResponseEntity.ok(BaseResponse.success(revenue, "Lấy tổng doanh thu thành công"));
     }
 
+    @GetMapping("/getAddress")
+    public ResponseEntity<BaseResponse<List<String>>> getAddressFromOrder() {
+        return ResponseEntity.ok(BaseResponse.success(orderService.getAddressFromOrder(), "Lấy địa chỉ giao hàng thành công"));
+    }
+
 
 
 

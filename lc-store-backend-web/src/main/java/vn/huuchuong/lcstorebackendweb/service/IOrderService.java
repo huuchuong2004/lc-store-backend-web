@@ -30,4 +30,7 @@ public interface IOrderService  {
     int countTotalOrders();
 
     BigDecimal getTotalRevenue();
+
+
+    List<String> getAddressFromOrder();
 }

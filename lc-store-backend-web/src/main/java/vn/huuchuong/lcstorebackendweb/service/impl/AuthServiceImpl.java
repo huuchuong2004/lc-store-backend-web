@@ -128,10 +128,14 @@ public class AuthServiceImpl implements IAuthService {
     public BaseResponse<CreateUserResponse> register(CreateUserRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
-            return BaseResponse.error("Username exiist");
+            throw new BusinessException("Username already exists");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            return BaseResponse.error("Email exiist");
+            throw new BusinessException("Email already exists");
+        }
+
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new BusinessException("Phone already exists");
         }
 
         User user = modelMapper.map(request, User.class);
